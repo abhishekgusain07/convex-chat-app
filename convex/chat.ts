@@ -150,6 +150,39 @@ export const deleteConversation = mutation({
     }
 })
 
+export const getMessages = query({
+    args: {
+        conversationId: v.id("conversations"),
+        limit: v.optional(v.number())
+    },
+    handler: async (ctx, args) => {
+        const messages = await ctx.db
+        .query("messages")
+        .filter((q) => {
+            return q.eq(q.field("conversationId"), args.conversationId);
+        })
+        .order("asc")
+        .take(args.limit ?? 50);
+        
+        const messageWithSenderDetails = await Promise.all(
+            messages.map(async (message) => {
+                const sender = await ctx.db.get(message.senderId);
+                return {
+                    id: message._id,
+                    sender_userId: sender?.userId,
+                    sender: sender?.name ?? "unknown",
+                    content: message.content,
+                    time: formatChatTime(new Date(message.createdAt)),
+                    isSent: true,
+                    type: message.type,
+                    mediaUrl: message.mediaUrl
+                };
+            })
+        )
+        return messageWithSenderDetails;
+    }
+})
+
 const formatChatTime = (date: Date) => {
     const now = new Date();
     const yesterday = new Date(now);
