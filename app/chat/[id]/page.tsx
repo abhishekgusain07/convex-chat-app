@@ -5,8 +5,8 @@ import { preloadQuery } from "convex/nextjs";
 import ChatList from "../_component/chatList";
 import ChatInput from "../_component/chatInput";
 
-const Conversations = async ({ params } : { params: { id: string } }) => {
-    const conversationId = params.id;
+const Conversations = async ({ params } : { params: Promise<{ id: string } > }) => {
+    const conversationId = (await params).id;
     const { userId } = await auth();
 
     const preloadedMessages = await preloadQuery(api.chat.getMessages, {
