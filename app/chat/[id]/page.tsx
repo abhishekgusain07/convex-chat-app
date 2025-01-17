@@ -3,6 +3,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { auth } from "@clerk/nextjs/server";
 import { preloadQuery } from "convex/nextjs";
 import ChatList from "../_component/chatList";
+import ChatInput from "../_component/chatInput";
 
 const Conversations = async ({ params } : { params: { id: string } }) => {
     const conversationId = params.id;
@@ -16,7 +17,7 @@ const Conversations = async ({ params } : { params: { id: string } }) => {
         <div className="h-screen flex flex-col w-full">
             <div className="flex-1 flex flex-col overflow-hidden">
                 <ChatList userId={userId!} preloadedMessages={preloadedMessages} />
-                {/* <FormChat userId={userId!} conversationId={conversationId} /> */}
+                <ChatInput userId={userId!} conversationId={conversationId} />
             </div>
         </div>
     )

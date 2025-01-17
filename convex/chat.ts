@@ -183,6 +183,62 @@ export const getMessages = query({
     }
 })
 
+export const sendMessage = mutation({
+    args: {
+        conversationId: v.id("conversations"),
+        content: v.string(),
+        senderId: v.string(),
+        type: v.optional(v.union(
+            v.literal("text"),
+            v.literal("image")
+        )),
+        mediaUrl: v.optional(v.string())
+    },
+    handler: async (ctx, args) => {
+        const sender = await ctx.db
+        .query("users")
+        .filter((user) => {
+            return user.eq(user.field("userId"), args.senderId);
+        })
+        .first();
+        
+        if(!sender) {
+            throw new Error("Sender not found");
+        }
+        
+        const messageId = await ctx.db
+        .insert("messages", {
+            conversationId: args.conversationId,
+            senderId: sender._id,
+            content: args.content,
+            type: args.type ?? "text",
+            mediaUrl: args.mediaUrl,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            isEdited: false,
+        });
+        await ctx.db.patch(args.conversationId, {
+            lastMessageId: messageId,
+            updatedAt: Date.now(),
+        });
+        return messageId;
+    }
+})
+
+export const generateUploadUrl = mutation(async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  });
+  
+  export const getUploadUrl = mutation({
+    args: {
+      storageId: v.id("_storage"),
+    },
+    handler: async (ctx, args) => {
+      const url = await ctx.storage.getUrl(args.storageId);
+      return url;
+    },
+  });
+  
 const formatChatTime = (date: Date) => {
     const now = new Date();
     const yesterday = new Date(now);
