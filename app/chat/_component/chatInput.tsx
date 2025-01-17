@@ -10,9 +10,48 @@ import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-
 interface FormInputs {
   message: string;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: {
+    [key: number]: {
+      [key: number]: {
+        transcript: string;
+      };
+    } & {
+      isFinal: boolean;
+    };
+  };
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: 'not-allowed' | 'no-speech' | 'network' | string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (event: Event) => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
+  onend: (event: Event) => void;
+  start: () => void;
+  stop: () => void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: {
+      new (): SpeechRecognition;
+    };
+    webkitSpeechRecognition?: {
+      new (): SpeechRecognition;
+    };
+  }
 }
 
 export default function FormChat({ conversationId, userId }: {
@@ -54,12 +93,14 @@ export default function FormChat({ conversationId, userId }: {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const SpeechRecognitionConstructor = 
+        window.SpeechRecognition || 
+        window.webkitSpeechRecognition;
 
-      if (SpeechRecognition) {
+      if (SpeechRecognitionConstructor) {
         setSpeecSupported(true)
 
-        recognitionRef.current = new SpeechRecognition()
+        recognitionRef.current = new SpeechRecognitionConstructor()
         const recognition = recognitionRef.current
 
         recognition.continuous = true
@@ -71,7 +112,7 @@ export default function FormChat({ conversationId, userId }: {
           toast.success("Started Listening")
         }
 
-        recognition.onresult = (event:any) => {
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
           const current = event.resultIndex;
           const transcript = event.results[current][0].transcript
           const currentMessage = watch("message") || ""
@@ -81,7 +122,7 @@ export default function FormChat({ conversationId, userId }: {
           }
         }
 
-        recognition.onerror = (event:any) => {
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
           console.log('Speech recognition error: ', event.error)
           setIsListening(false)
 
@@ -113,7 +154,7 @@ export default function FormChat({ conversationId, userId }: {
       }
     }
 
-  }, [])
+  }, [setValue, watch])
 
 
   const toggleListening = async () => {
