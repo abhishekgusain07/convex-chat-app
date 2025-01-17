@@ -82,16 +82,12 @@ export const getConversations = query({
             const otherParticipantId = conversation.participantOne === user._id ? conversation.participantTwo : conversation.participantOne;
 
             const otherParticipant = await ctx.db
-            .query("users")
-            .filter((user) => {
-                return user.eq(user.field("userId"), otherParticipantId);
-            })
-            .first();
+            .get(otherParticipantId);
 
             const lastMessage = conversation.lastMessageId ? await ctx.db.get(conversation.lastMessageId) : null;
             return {
                 id: conversation._id,
-                name: otherParticipant?.name ?? "Unknown",
+                name: otherParticipant?.name ?? "unknown",
                 chatImage: otherParticipant?.profileImage ?? "",
                 lastMessage: lastMessage?.content ?? "",
                 time: formatChatTime(new Date(conversation.updatedAt)),

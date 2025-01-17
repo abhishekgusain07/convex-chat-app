@@ -89,6 +89,7 @@ const SideBar = ({ preloadedUserInfo, preloadedConversations }: SideBarProps) =>
           />
         </div>
       </div>
+      
       {/* Conversations list */}
       <div className="flex-1 overflow-y-auto">
         {filteredConversations?.map((chat) => (
@@ -104,6 +105,7 @@ const SideBar = ({ preloadedUserInfo, preloadedConversations }: SideBarProps) =>
                   </AvatarFallback>
                 </Avatar>
               </div>
+
               {/* Conversation details - Only visible on md and larger screens */}
               <div className="hidden md:block flex-1 min-w-0 ml-3">
                 <div className="flex justify-between items-baseline">
